@@ -21,7 +21,7 @@ public class CompressImageManager implements CompressImage {
 
     private CompressImageUtil compressImageUtil; // 压缩工具类
     private ArrayList<Photo> images; // 需要压缩的图片集合
-    private CompressImage.CompressListener listener; // 压缩的监听
+    private CompressListener listener; // 压缩的监听
     private CompressConfig config; // 压缩配置
 
     private CompressImageManager(Context context, CompressConfig compressConfig,
@@ -52,22 +52,27 @@ public class CompressImageManager implements CompressImage {
         compress(images.get(0));
     }
 
+    // 从需要压缩的图片集合中，第一张开始压缩
     private void compress(final Photo image) {
+        // 如果原始图片有问题
         if (TextUtils.isEmpty(image.getOriginalPath())) {
             continueCompress(image, false);
             return;
         }
+        // 如果图片文件不存在或者不是文件
         File file = new File(image.getOriginalPath());
         if (!file.exists() || !file.isFile()) {
             continueCompress(image, false);
             return;
         }
+
+        // 如果图片文件的大小不在压缩的最小值之内，不用压缩了
         if (file.length() < config.getMaxSize()) {
             continueCompress(image, true);
             return;
         }
 
-        // 压缩
+        // 开始压缩
         compressImageUtil.compress(image.getOriginalPath(), new CompressResultListener() {
             @Override
             public void onCompressSuccess(String imgPath) {
@@ -84,6 +89,7 @@ public class CompressImageManager implements CompressImage {
 
     }
 
+    // 开始递归压缩，不管成功或者失败，都进入集合的下一张需要压缩的图片对象
     private void continueCompress(Photo image, boolean b, String... error) {
         image.setCompressed(b);
         // 获取当前索引
