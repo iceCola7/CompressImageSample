@@ -19,6 +19,7 @@ import com.cxz.compresslib.listener.CompressImage;
 import com.cxz.compresslib.utils.CachePathUtil;
 import com.cxz.compresslib.utils.CommonUtil;
 import com.cxz.compresslib.utils.Constants;
+import com.cxz.compresslib.utils.FileProvider7;
 import com.cxz.compresslib.utils.UriParseUtil;
 
 import java.io.File;
@@ -53,13 +54,15 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
     // 拍照
     public void camera(View view) {
         // android 7.0 file 路径的变更，需要使用 FileProvider 来做
-        Uri outputUri;
         File file = CachePathUtil.getCameraCacheFile();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            outputUri = UriParseUtil.getCameraOutPutUri(this, file);
-        } else {
-            outputUri = Uri.fromFile(file);
-        }
+        Uri outputUri = FileProvider7.getUriForFile(this, file);
+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            outputUri = UriParseUtil.getCameraOutPutUri(this, file);
+//        } else {
+//            outputUri = Uri.fromFile(file);
+//        }
+
         cameraCachePath = file.getAbsolutePath();
         CommonUtil.hasCamera(this, CommonUtil.getCameraIntent(outputUri), Constants.CAMERA_CODE);
     }
