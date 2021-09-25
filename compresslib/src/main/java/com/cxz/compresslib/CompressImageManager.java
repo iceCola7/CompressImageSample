@@ -15,7 +15,7 @@ import java.util.ArrayList;
 /**
  * @author chenxz
  * @date 2019/4/21
- * @desc
+ * @desc 压缩图片管理类
  */
 public class CompressImageManager implements CompressImage {
 
@@ -24,12 +24,23 @@ public class CompressImageManager implements CompressImage {
     private CompressListener listener; // 压缩的监听
     private CompressConfig config; // 压缩配置
 
+    private static final String DEFAULT_DISK_CACHE_DIR = "image_cache";
+
     private CompressImageManager(Context context, CompressConfig compressConfig,
                                  ArrayList<Photo> images, CompressListener listener) {
         this.images = images;
         this.listener = listener;
-        this.config = compressConfig;
+        this.config = compressConfig == null ? CompressConfig.getDefaultConfig() : compressConfig;
         this.compressImageUtil = new CompressImageUtil(context, config);
+
+        if (TextUtils.isEmpty(this.config.getCacheDir())) {
+            // 缓存目录为空，设置默认的缓存目录
+            this.config.setCacheDir(getImageCacheDir(context).getAbsolutePath());
+        }
+    }
+
+    public static CompressImage build(Context context, ArrayList<Photo> images, CompressListener listener) {
+        return build(context, CompressConfig.getDefaultConfig(), images, listener);
     }
 
     public static CompressImage build(Context context, CompressConfig compressConfig,
@@ -37,15 +48,47 @@ public class CompressImageManager implements CompressImage {
         return new CompressImageManager(context, compressConfig, images, listener);
     }
 
+    /**
+     * Returns a directory with a default name in the private cache directory of the application to
+     * use to store retrieved audio.
+     *
+     * @param context A context.
+     * @see #getImageCacheDir(Context, String)
+     */
+    private File getImageCacheDir(Context context) {
+        return getImageCacheDir(context, DEFAULT_DISK_CACHE_DIR);
+    }
+
+    /**
+     * Returns a directory with the given name in the private cache directory of the application to
+     * use to store retrieved media and thumbnails.
+     *
+     * @param context   A context.
+     * @param cacheName The name of the subdirectory in which to store the cache.
+     * @see #getImageCacheDir(Context)
+     */
+    private File getImageCacheDir(Context context, String cacheName) {
+        File cacheDir = context.getExternalCacheDir();
+        if (cacheDir != null) {
+            File result = new File(cacheDir, cacheName);
+            if (!result.mkdirs() && (!result.exists() || !result.isDirectory())) {
+                // File wasn't able to create a directory, or the result exists but not a directory
+                return null;
+            }
+            return result;
+        }
+        return null;
+    }
+
     @Override
     public void compress() {
         if (images == null || images.isEmpty()) {
-            listener.onCompressFailed(images, "images 为空");
+            listener.onCompressFailed(images, "images are null");
             return;
         }
         for (Photo image : images) {
             if (image == null) {
-                listener.onCompressFailed(images, "image 为空");
+                listener.onCompressFailed(images, "image is null");
                 return;
             }
         }
