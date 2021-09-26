@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.os.Handler;
+import android.media.ExifInterface;
 
 import com.cxz.compresslib.config.CompressConfig;
 import com.cxz.compresslib.listener.CompressResultListener;
@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * @author chenxz
@@ -25,7 +26,6 @@ public class CompressImageUtil {
 
     private Context context;
     private CompressConfig config;
-    private Handler mHandler = new Handler();
 
     public CompressImageUtil(Context context, CompressConfig config) {
         this.context = context;
@@ -37,7 +37,7 @@ public class CompressImageUtil {
             try {
                 compressImageByPixel(imagePath, listener);
             } catch (Exception e) {
-                listener.onCompressFailed(imagePath, String.format("图片压缩失败%s", e.toString()));
+                listener.onCompressFailed(imagePath, String.format("image compress failed %s", e.toString()));
                 e.printStackTrace();
             }
         } else {
@@ -54,10 +54,20 @@ public class CompressImageUtil {
             @Override
             public void run() {
                 try {
-                    File targetFile = compressRealImageByQ(imagePath);
-                    listener.onCompressSuccess(targetFile.getAbsolutePath());
-                } catch (Exception e) {
-                    listener.onCompressFailed(imagePath, e.getMessage());
+                    final File targetFile = compressRealImageByQ(imagePath);
+                    ThreadPoolManager.getInstance().runOnUIThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onCompressSuccess(targetFile.getAbsolutePath());
+                        }
+                    });
+                } catch (final Exception e) {
+                    ThreadPoolManager.getInstance().runOnUIThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onCompressFailed(imagePath, e.getMessage());
+                        }
+                    });
                     e.printStackTrace();
                 }
             }
@@ -70,10 +80,20 @@ public class CompressImageUtil {
             @Override
             public void run() {
                 try {
-                    File targetFile = compressRealImageByP(imagePath);
-                    listener.onCompressSuccess(targetFile.getAbsolutePath());
-                } catch (Exception e) {
-                    listener.onCompressFailed(imagePath, e.getMessage());
+                    final File targetFile = compressRealImageByP(imagePath);
+                    ThreadPoolManager.getInstance().runOnUIThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onCompressSuccess(targetFile.getAbsolutePath());
+                        }
+                    });
+                } catch (final Exception e) {
+                    ThreadPoolManager.getInstance().runOnUIThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.onCompressFailed(imagePath, e.getMessage());
+                        }
+                    });
                     e.printStackTrace();
                 }
             }
@@ -83,8 +103,13 @@ public class CompressImageUtil {
     private File compressRealImageByQ(String srcPath) throws Exception {
         Bitmap srcBitmap = BitmapFactory.decodeFile(srcPath);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        // 将图片旋转正确的角度
+        srcBitmap = rotatingImage(srcBitmap, getBitmapDegree(srcPath));
+
         // 质量压缩方法，这里100表示不压缩，把压缩后的数据存放到baos中
         srcBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+
         int options = 100;
         while (baos.toByteArray().length / 1024 > 200) { //循环判断如果压缩后图片是否大于200kb,大于继续压缩
             // 重置baos即清空baos
@@ -106,17 +131,27 @@ public class CompressImageUtil {
         options.inSampleSize = 1;
         BitmapFactory.decodeStream(srcIs, null, options);
         options.inJustDecodeBounds = false;
-
         int srcWidth = options.outWidth;
         int srcHeight = options.outHeight;
 
+        // 关闭输入流
+        srcIs.close();
+
         options.inSampleSize = computeSize(srcWidth, srcHeight);
 
-        Bitmap tagBitmap = BitmapFactory.decodeStream(srcIs, null, options);
+        FileInputStream newSrcIs = new FileInputStream(srcPath);
+
+        Bitmap targetBitmap = BitmapFactory.decodeStream(newSrcIs, null, options);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
-        tagBitmap.compress(Bitmap.CompressFormat.JPEG, 60, stream);
-        tagBitmap.recycle();
+        // 将图片旋转正确的角度
+        targetBitmap = rotatingImage(targetBitmap, getBitmapDegree(srcPath));
+
+        targetBitmap.compress(Bitmap.CompressFormat.JPEG, 60, stream);
+        targetBitmap.recycle();
+
+        // 关闭输入流
+        newSrcIs.close();
 
         return writeToLocal(stream);
     }
@@ -156,6 +191,37 @@ public class CompressImageUtil {
         }
     }
 
+    /**
+     * 读取图片的旋转的角度
+     *
+     * @param path 图片绝对路径
+     * @return 图片的旋转角度
+     */
+    public static int getBitmapDegree(String path) {
+        int degree = 0;
+        try {
+            // 从指定路径下读取图片，并获取其EXIF信息
+            ExifInterface exifInterface = new ExifInterface(path);
+            // 获取图片的旋转信息
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    degree = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    degree = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    degree = 270;
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return degree;
+    }
+
     private Bitmap rotatingImage(Bitmap bitmap, int angle) {
         Matrix matrix = new Matrix();
 
@@ -163,9 +229,6 @@ public class CompressImageUtil {
 
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
-
-
-
 
 
     /**********************************************************************************************/

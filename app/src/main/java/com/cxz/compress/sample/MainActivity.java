@@ -4,13 +4,16 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.cxz.compresslib.CompressImageManager;
 import com.cxz.compresslib.bean.Photo;
@@ -32,10 +35,14 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
     private ProgressDialog dialog; // 压缩进度加载框
     private String cameraCachePath; // 拍照源文件
 
+    private ImageView imageView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        imageView = findViewById(R.id.imageView);
 
         // 运行时权限申请
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -105,6 +112,11 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
     public void onCompressSuccess(ArrayList<Photo> images) {
         Log.e(TAG, "onCompressSuccess: success");
         if (dialog != null) dialog.dismiss();
+
+        if (!images.isEmpty()) {
+            Photo photo = images.get(0);
+            imageView.setImageBitmap(BitmapFactory.decodeFile(photo.getCompressPath()));
+        }
     }
 
     @Override
