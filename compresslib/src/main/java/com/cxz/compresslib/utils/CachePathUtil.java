@@ -1,6 +1,6 @@
 package com.cxz.compresslib.utils;
 
-import android.os.Environment;
+import android.content.Context;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -14,34 +14,59 @@ import java.util.Locale;
  */
 public class CachePathUtil {
 
+    private static final String DEFAULT_DISK_CACHE_DIR = "image_cache";
+
     /**
-     * 独立创建拍照路径
+     * Returns a directory with a default name in the private cache directory of the application to
+     * use to store retrieved audio.
      *
-     * @param fileName 图片名
-     * @return 缓存文件夹路径
+     * @param context A context.
+     * @see #getImageCacheDir(Context, String)
      */
-    private static File getCameraCacheDir(String fileName) {
-        File cache = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        if (!cache.mkdirs() && (!cache.exists() || !cache.isDirectory())) {
-            return null;
-        } else {
-            return new File(cache, fileName);
-        }
+    public static File getImageCacheDir(Context context) {
+        return getImageCacheDir(context, DEFAULT_DISK_CACHE_DIR);
     }
 
     /**
-     * 获取图片文件名
+     * Returns a directory with the given name in the private cache directory of the application to
+     * use to store retrieved media and thumbnails.
+     *
+     * @param context   A context.
+     * @param cacheName The name of the subdirectory in which to store the cache.
+     * @see #getImageCacheDir(Context)
      */
+    private static File getImageCacheDir(Context context, String cacheName) {
+        File cacheDir = context.getExternalCacheDir();
+        if (cacheDir != null) {
+            File result = new File(cacheDir, cacheName);
+            if (!result.mkdirs() && (!result.exists() || !result.isDirectory())) {
+                // File wasn't able to create a directory, or the result exists but not a directory
+                return null;
+            }
+            return result;
+        }
+        return null;
+    }
+
+    /**
+     * Returns a file
+     * @param context Context
+     * @return File
+     */
+    public static File getImageCacheFile(Context context) {
+        return new File(getImageCacheDir(context), getImageCacheFileName());
+    }
+
+    /**
+     * Returns a file name
+     *
+     * @return String
+     */
+    public static String getImageCacheFileName() {
+        return "compress_" + getBaseFileName() + ".jpg";
+    }
+
     private static String getBaseFileName() {
         return new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(new Date());
     }
-
-    /**
-     * 获取拍照缓存文件
-     */
-    public static File getCameraCacheFile() {
-        String fileName = "camera_" + getBaseFileName() + ".jpg";
-        return getCameraCacheDir(fileName);
-    }
-
 }

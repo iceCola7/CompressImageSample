@@ -5,7 +5,7 @@ package com.cxz.compresslib.bean;
  * @date 2019/4/21
  * @desc
  */
-public class Photo {
+public class Image {
 
     /**
      * 图片原始路径
@@ -20,7 +20,7 @@ public class Photo {
      */
     private String compressPath;
 
-    public Photo(String originalPath) {
+    public Image(String originalPath) {
         this.originalPath = originalPath;
     }
 
@@ -46,5 +46,14 @@ public class Photo {
 
     public void setCompressPath(String compressPath) {
         this.compressPath = compressPath;
+    }
+
+    @Override
+    public String toString() {
+        return "Image{" +
+                "originalPath='" + originalPath + '\'' +
+                ", compressed=" + compressed +
+                ", compressPath='" + compressPath + '\'' +
+                '}';
     }
 }

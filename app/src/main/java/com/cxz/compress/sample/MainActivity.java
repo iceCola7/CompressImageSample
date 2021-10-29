@@ -16,7 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.cxz.compresslib.CompressImageManager;
-import com.cxz.compresslib.bean.Photo;
+import com.cxz.compresslib.bean.Image;
 import com.cxz.compresslib.config.CompressConfig;
 import com.cxz.compresslib.listener.CompressImage;
 import com.cxz.compresslib.utils.CachePathUtil;
@@ -30,7 +30,8 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements CompressImage.CompressListener {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "cxz";
+
     private CompressConfig compressConfig; // 压缩配置
     private ProgressDialog dialog; // 压缩进度加载框
     private String cameraCachePath; // 拍照源文件
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
     // 拍照
     public void camera(View view) {
         // android 7.0 file 路径的变更，需要使用 FileProvider 来做
-        File file = CachePathUtil.getCameraCacheFile();
+        File file = CachePathUtil.getImageCacheFile(this);
         Uri outputUri = FileProvider7.getUriForFile(this, file);
 
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -96,31 +97,31 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
     }
 
     private void preCompress(String path) {
-        ArrayList<Photo> photos = new ArrayList<>();
-        photos.add(new Photo(path));
-        if (!photos.isEmpty()) compress(photos);
+        ArrayList<Image> images = new ArrayList<>();
+        images.add(new Image(path));
+        if (!images.isEmpty()) compress(images);
     }
 
-    private void compress(ArrayList<Photo> photos) {
+    private void compress(ArrayList<Image> images) {
         if (compressConfig.isShowCompressDialog()) {
             dialog = CommonUtil.showProgressDialog(this, "压缩中...");
         }
-        CompressImageManager.build(this, compressConfig, photos, this).compress();
+        CompressImageManager.build(this, compressConfig, images, this).compress();
     }
 
     @Override
-    public void onCompressSuccess(ArrayList<Photo> images) {
-        Log.e(TAG, "onCompressSuccess: success");
+    public void onCompressSuccess(ArrayList<Image> images) {
+        Log.e(TAG, "onCompressSuccess success: " + images);
         if (dialog != null) dialog.dismiss();
 
         if (!images.isEmpty()) {
-            Photo photo = images.get(0);
-            imageView.setImageBitmap(BitmapFactory.decodeFile(photo.getCompressPath()));
+            Image image = images.get(0);
+            imageView.setImageBitmap(BitmapFactory.decodeFile(image.getCompressPath()));
         }
     }
 
     @Override
-    public void onCompressFailed(ArrayList<Photo> images, String error) {
+    public void onCompressFailed(ArrayList<Image> images, String error) {
         Log.e(TAG, "onCompressFailed: " + error);
         if (dialog != null) dialog.dismiss();
     }

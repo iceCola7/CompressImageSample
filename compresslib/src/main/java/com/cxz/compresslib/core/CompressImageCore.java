@@ -1,6 +1,5 @@
 package com.cxz.compresslib.core;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -8,6 +7,7 @@ import android.media.ExifInterface;
 
 import com.cxz.compresslib.config.CompressConfig;
 import com.cxz.compresslib.listener.CompressResultListener;
+import com.cxz.compresslib.utils.CachePathUtil;
 import com.cxz.compresslib.utils.ThreadPoolManager;
 
 import java.io.ByteArrayInputStream;
@@ -22,13 +22,11 @@ import java.io.IOException;
  * @date 2019/4/21
  * @desc
  */
-public class CompressImageUtil {
+public class CompressImageCore {
 
-    private Context context;
     private CompressConfig config;
 
-    public CompressImageUtil(Context context, CompressConfig config) {
-        this.context = context;
+    public CompressImageCore(CompressConfig config) {
         this.config = config == null ? CompressConfig.getDefaultConfig() : config;
     }
 
@@ -157,7 +155,7 @@ public class CompressImageUtil {
     }
 
     private File writeToLocal(ByteArrayOutputStream stream) throws Exception {
-        File targetFile = new File(config.getCacheDir(), System.currentTimeMillis() + ".jpg");
+        File targetFile = new File(config.getCacheDir(), CachePathUtil.getImageCacheFileName());
         FileOutputStream fos = new FileOutputStream(targetFile);
         fos.write(stream.toByteArray());
         fos.flush();

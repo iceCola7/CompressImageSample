@@ -1,5 +1,9 @@
 package com.cxz.compresslib.config;
 
+import android.text.TextUtils;
+
+import com.cxz.compresslib.utils.CachePathUtil;
+
 import java.io.Serializable;
 
 /**
@@ -50,7 +54,7 @@ public class CompressConfig implements Serializable {
     }
 
     public static CompressConfig getDefaultConfig() {
-        return new CompressConfig();
+        return builder().create();
     }
 
     public int getUnCompressMinPixel() {

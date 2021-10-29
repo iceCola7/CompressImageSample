@@ -1,6 +1,6 @@
 package com.cxz.compresslib.listener;
 
-import com.cxz.compresslib.bean.Photo;
+import com.cxz.compresslib.bean.Image;
 
 import java.util.ArrayList;
 
@@ -17,10 +17,10 @@ public interface CompressImage {
     interface CompressListener {
 
         // 成功
-        void onCompressSuccess(ArrayList<Photo> images);
+        void onCompressSuccess(ArrayList<Image> images);
 
         // 失败
-        void onCompressFailed(ArrayList<Photo> images, String error);
+        void onCompressFailed(ArrayList<Image> images, String error);
     }
 
 }
