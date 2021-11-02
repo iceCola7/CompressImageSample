@@ -7,7 +7,8 @@ import com.cxz.compresslib.bean.Image;
 import com.cxz.compresslib.config.CompressConfig;
 import com.cxz.compresslib.core.CompressImageCore;
 import com.cxz.compresslib.listener.CompressImage;
-import com.cxz.compresslib.listener.CompressResultListener;
+import com.cxz.compresslib.listener.OnCompressImageListener;
+import com.cxz.compresslib.listener.OnSingleCompressImageListener;
 import com.cxz.compresslib.utils.CachePathUtil;
 
 import java.io.File;
@@ -22,13 +23,13 @@ public class CompressImageManager implements CompressImage {
 
     private CompressImageCore compressImageCore; // 压缩工具类
     private ArrayList<Image> images; // 需要压缩的图片集合
-    private CompressListener listener; // 压缩的监听
+    private OnCompressImageListener onCompressImageListener; // 压缩的监听
     private CompressConfig config; // 压缩配置
 
     private CompressImageManager(Context context, CompressConfig compressConfig,
-                                 ArrayList<Image> images, CompressListener listener) {
+                                 ArrayList<Image> images, OnCompressImageListener onCompressImageListener) {
         this.images = images;
-        this.listener = listener;
+        this.onCompressImageListener = onCompressImageListener;
         this.config = compressConfig == null ? CompressConfig.getDefaultConfig() : compressConfig;
         this.compressImageCore = new CompressImageCore(config);
         if (TextUtils.isEmpty(this.config.getCacheDir())) {
@@ -37,24 +38,24 @@ public class CompressImageManager implements CompressImage {
         }
     }
 
-    public static CompressImage build(Context context, ArrayList<Image> images, CompressListener listener) {
-        return build(context, CompressConfig.getDefaultConfig(), images, listener);
+    public static CompressImage build(Context context, ArrayList<Image> images, OnCompressImageListener onCompressImageListener) {
+        return build(context, CompressConfig.getDefaultConfig(), images, onCompressImageListener);
     }
 
     public static CompressImage build(Context context, CompressConfig compressConfig,
-                                      ArrayList<Image> images, CompressListener listener) {
-        return new CompressImageManager(context, compressConfig, images, listener);
+                                      ArrayList<Image> images, OnCompressImageListener onCompressImageListener) {
+        return new CompressImageManager(context, compressConfig, images, onCompressImageListener);
     }
 
     @Override
     public void compress() {
         if (images == null || images.isEmpty()) {
-            listener.onCompressFailed(images, "images are null");
+            onCompressImageListener.onCompressFailed(images, "images are null");
             return;
         }
         for (Image image : images) {
             if (image == null) {
-                listener.onCompressFailed(images, "image is null");
+                onCompressImageListener.onCompressFailed(images, "image is null");
                 return;
             }
         }
@@ -84,7 +85,7 @@ public class CompressImageManager implements CompressImage {
         }
 
         // 开始压缩
-        compressImageCore.compress(image.getOriginalPath(), new CompressResultListener() {
+        compressImageCore.compress(image.getOriginalPath(), new OnSingleCompressImageListener() {
             @Override
             public void onCompressSuccess(String imgPath) {
                 // 设置压缩成功的图片路径
@@ -117,16 +118,16 @@ public class CompressImageManager implements CompressImage {
 
     private void handleCallback(String... error) {
         if (error.length > 0) {
-            listener.onCompressFailed(images, error[0]);
+            onCompressImageListener.onCompressFailed(images, error[0]);
             return;
         }
         for (Image image : images) {
             if (!image.isCompressed()) {
-                listener.onCompressFailed(images, "");
+                onCompressImageListener.onCompressFailed(images, "");
                 return;
             }
         }
-        listener.onCompressSuccess(images);
+        onCompressImageListener.onCompressSuccess(images);
     }
 
 }

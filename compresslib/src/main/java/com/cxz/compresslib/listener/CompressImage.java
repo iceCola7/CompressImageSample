@@ -14,13 +14,4 @@ public interface CompressImage {
     // 开始压缩
     void compress();
 
-    interface CompressListener {
-
-        // 成功
-        void onCompressSuccess(ArrayList<Image> images);
-
-        // 失败
-        void onCompressFailed(ArrayList<Image> images, String error);
-    }
-
 }

@@ -1,7 +1,6 @@
 package com.cxz.compress.sample;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
@@ -18,22 +17,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.cxz.compresslib.CompressImageManager;
 import com.cxz.compresslib.bean.Image;
 import com.cxz.compresslib.config.CompressConfig;
-import com.cxz.compresslib.listener.CompressImage;
+import com.cxz.compresslib.listener.OnCompressImageListener;
 import com.cxz.compresslib.utils.CachePathUtil;
 import com.cxz.compresslib.utils.CommonUtil;
 import com.cxz.compresslib.utils.Constants;
 import com.cxz.compresslib.utils.FileProvider7;
-import com.cxz.compresslib.utils.UriParseUtil;
+import com.cxz.compresslib.utils.GetImagePath;
 
 import java.io.File;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements CompressImage.CompressListener {
+public class MainActivity extends AppCompatActivity implements OnCompressImageListener {
 
     private static final String TAG = "cxz";
 
     private CompressConfig compressConfig; // 压缩配置
-    private ProgressDialog dialog; // 压缩进度加载框
     private String cameraCachePath; // 拍照源文件
 
     private ImageView imageView;
@@ -90,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
         if (requestCode == Constants.ALBUM_CODE && resultCode == RESULT_OK) {
             if (data != null) {
                 Uri uri = data.getData();
-                String path = UriParseUtil.getPath(this, uri);
+                String path = GetImagePath.getPath(this, uri);
                 preCompress(path);
             }
         }
@@ -103,17 +101,12 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
     }
 
     private void compress(ArrayList<Image> images) {
-        if (compressConfig.isShowCompressDialog()) {
-            dialog = CommonUtil.showProgressDialog(this, "压缩中...");
-        }
         CompressImageManager.build(this, compressConfig, images, this).compress();
     }
 
     @Override
     public void onCompressSuccess(ArrayList<Image> images) {
         Log.e(TAG, "onCompressSuccess success: " + images);
-        if (dialog != null) dialog.dismiss();
-
         if (!images.isEmpty()) {
             Image image = images.get(0);
             imageView.setImageBitmap(BitmapFactory.decodeFile(image.getCompressPath()));
@@ -123,7 +116,6 @@ public class MainActivity extends AppCompatActivity implements CompressImage.Com
     @Override
     public void onCompressFailed(ArrayList<Image> images, String error) {
         Log.e(TAG, "onCompressFailed: " + error);
-        if (dialog != null) dialog.dismiss();
     }
 
 }

@@ -5,7 +5,7 @@ package com.cxz.compresslib.listener;
  * @date 2019/4/21
  * @desc 单张图片压缩时的监听
  */
-public interface CompressResultListener {
+public interface OnSingleCompressImageListener {
 
     // 成功
     void onCompressSuccess(String imgPath);

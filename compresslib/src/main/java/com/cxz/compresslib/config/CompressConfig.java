@@ -1,9 +1,5 @@
 package com.cxz.compresslib.config;
 
-import android.text.TextUtils;
-
-import com.cxz.compresslib.utils.CachePathUtil;
-
 import java.io.Serializable;
 
 /**
@@ -45,10 +41,6 @@ public class CompressConfig implements Serializable {
      * 压缩后缓存图片目录，非文件路径
      */
     private String cacheDir;
-    /**
-     * 是否显示压缩进度条
-     */
-    private boolean showCompressDialog;
 
     private CompressConfig() {
     }
@@ -121,14 +113,6 @@ public class CompressConfig implements Serializable {
         this.cacheDir = cacheDir;
     }
 
-    public boolean isShowCompressDialog() {
-        return showCompressDialog;
-    }
-
-    public void setShowCompressDialog(boolean showCompressDialog) {
-        this.showCompressDialog = showCompressDialog;
-    }
-
     public static Builder builder() {
         return new Builder();
     }
@@ -177,11 +161,6 @@ public class CompressConfig implements Serializable {
 
         public Builder setCacheDir(String cacheDir) {
             config.setCacheDir(cacheDir);
-            return this;
-        }
-
-        public Builder setShowCompressDialog(boolean showCompressDialog) {
-            config.setShowCompressDialog(showCompressDialog);
             return this;
         }
 

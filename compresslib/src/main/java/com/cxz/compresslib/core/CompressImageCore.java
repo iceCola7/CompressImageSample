@@ -6,7 +6,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 
 import com.cxz.compresslib.config.CompressConfig;
-import com.cxz.compresslib.listener.CompressResultListener;
+import com.cxz.compresslib.listener.OnSingleCompressImageListener;
 import com.cxz.compresslib.utils.CachePathUtil;
 import com.cxz.compresslib.utils.ThreadPoolManager;
 
@@ -30,7 +30,7 @@ public class CompressImageCore {
         this.config = config == null ? CompressConfig.getDefaultConfig() : config;
     }
 
-    public void compress(String imagePath, CompressResultListener listener) {
+    public void compress(String imagePath, OnSingleCompressImageListener listener) {
         if (config.isEnablePixelCompress()) {
             try {
                 compressImageByPixel(imagePath, listener);
@@ -46,7 +46,7 @@ public class CompressImageCore {
     /**
      * 多线程压缩图片的质量
      */
-    private void compressImageByQuality(final String imagePath, final CompressResultListener listener) {
+    private void compressImageByQuality(final String imagePath, final OnSingleCompressImageListener listener) {
         // TODO: 2019/4/21
         ThreadPoolManager.getInstance().runOnWorkThread(new Runnable() {
             @Override
@@ -72,7 +72,7 @@ public class CompressImageCore {
         });
     }
 
-    private void compressImageByPixel(final String imagePath, final CompressResultListener listener) {
+    private void compressImageByPixel(final String imagePath, final OnSingleCompressImageListener listener) {
         // TODO: 2019/4/21
         ThreadPoolManager.getInstance().runOnWorkThread(new Runnable() {
             @Override

@@ -1,5 +1,6 @@
 package com.cxz.compresslib.utils;
 
+import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -8,58 +9,12 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import androidx.core.content.FileProvider;
 
-import java.io.File;
+public class GetImagePath {
 
-/**
- * @author chenxz
- * @date 2019/4/21
- * @desc
- */
-public class UriParseUtil {
-
-    /**
-     * 创建一个图片文件输出路径的URI（FileProvider）
-     *
-     * @param context 上下文
-     * @param file    文件
-     * @return 转换后的Scheme为FileProvider的URI
-     */
-    private static Uri getUriForFile(Context context, File file) {
-        return FileProvider.getUriForFile(context, getFileProvider(context), file);
-    }
-
-    /**
-     * 获取FileProvider路径，适配6.0+
-     *
-     * @param context 上下文
-     * @return FileProvider路径
-     */
-    private static String getFileProvider(Context context) {
-        return context.getPackageName() + ".fileprovider";
-    }
-
-    /**
-     * 获取拍照后照片的URI
-     *
-     * @param context 上下文
-     * @param file    照片文件
-     * @return 照片的URI
-     */
-    public static Uri getCameraOutPutUri(Context context, File file) {
-        return getUriForFile(context, file);
-    }
-
-    /**
-     * Get a file path from a Uri. This will get the the path for Storage Access
-     * Framework Documents, as well as the _data field for the MediaStore and
-     * other file-based ContentProviders.
-     *
-     * @param context The context.
-     * @param uri     The Uri to query.
-     * @author paulburke
-     */
+    //  4.4以上  content://com.android.providers.media.documents/document/image:3952
+    //  4.4以下  content://media/external/images/media/3951
+    @SuppressLint("NewApi")
     public static String getPath(final Context context, final Uri uri) {
 
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
@@ -75,12 +30,9 @@ public class UriParseUtil {
                 if ("primary".equalsIgnoreCase(type)) {
                     return Environment.getExternalStorageDirectory() + "/" + split[1];
                 }
-
-                // TODO handle non-primary volumes
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
-
                 final String id = DocumentsContract.getDocumentId(uri);
                 final Uri contentUri = ContentUris.withAppendedId(
                         Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
@@ -112,6 +64,10 @@ public class UriParseUtil {
         }
         // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            // Return the remote address
+            if (isGooglePhotosUri(uri))
+                return uri.getLastPathSegment();
+
             return getDataColumn(context, uri, null, null);
         }
         // File
@@ -122,18 +78,10 @@ public class UriParseUtil {
         return null;
     }
 
-    /**
-     * Get the value of the data column for this Uri. This is useful for
-     * MediaStore Uris, and other file-based ContentProviders.
-     *
-     * @param context       The context.
-     * @param uri           The Uri to query.
-     * @param selection     (Optional) Filter used in the query.
-     * @param selectionArgs (Optional) Selection arguments used in the query.
-     * @return The value of the _data column, which is typically a file path.
-     */
+    //Android 4.4以下版本自动使用该方法
     public static String getDataColumn(Context context, Uri uri, String selection,
                                        String[] selectionArgs) {
+
         Cursor cursor = null;
         final String column = "_data";
         final String[] projection = {
@@ -144,8 +92,8 @@ public class UriParseUtil {
             cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
                     null);
             if (cursor != null && cursor.moveToFirst()) {
-                final int column_index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(column_index);
+                final int index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(index);
             }
         } finally {
             if (cursor != null)
@@ -179,5 +127,11 @@ public class UriParseUtil {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
-
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Google Photos.
+     */
+    public static boolean isGooglePhotosUri(Uri uri) {
+        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
+    }
 }

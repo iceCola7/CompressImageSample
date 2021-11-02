@@ -1,13 +1,11 @@
 package com.cxz.compresslib.utils;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.widget.Toast;
 
 /**
  * @author chenxz
@@ -25,7 +23,7 @@ public class CommonUtil {
      */
     public static void hasCamera(Activity activity, Intent intent, int requestCode) {
         if (activity == null) {
-            throw new IllegalArgumentException("activity 不能为空");
+            throw new IllegalArgumentException("activity must not be null!");
         }
         PackageManager pm = activity.getPackageManager();
         boolean hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)
@@ -34,8 +32,8 @@ public class CommonUtil {
         if (hasCamera) {
             activity.startActivityForResult(intent, requestCode);
         } else {
-            Toast.makeText(activity, "当前设备没有相机", Toast.LENGTH_SHORT).show();
-            throw new IllegalArgumentException("当前设备没有相机");
+            // Toast.makeText(activity, "does not have a camera!", Toast.LENGTH_SHORT).show();
+            throw new IllegalArgumentException("does not have a camera!");
         }
     }
 
@@ -63,23 +61,6 @@ public class CommonUtil {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
         activity.startActivityForResult(intent, requestCode);
-    }
-
-    /**
-     * 显示圆形对话框
-     *
-     * @param activity      上下文
-     * @param progressTitle 显示的标题
-     */
-    public static ProgressDialog showProgressDialog(Activity activity, String... progressTitle) {
-        if (activity == null || activity.isFinishing()) return null;
-        String title = "提示";
-        if (progressTitle != null && progressTitle.length > 0) title = progressTitle[0];
-        ProgressDialog progressDialog = new ProgressDialog(activity);
-        progressDialog.setTitle(title);
-        progressDialog.setCancelable(false);
-        progressDialog.show();
-        return progressDialog;
     }
 
 }
